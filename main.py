@@ -7,16 +7,17 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver import ActionChains
 from selenium.webdriver.chrome.options import Options
 import time 
-from lxml import html
 import requests
-import pdfkit
 import os 
+import tkinter as tk
 
 def get_download_path():
-    pass
+    root = tk.Tk()
+    root.withdraw()
+    #file_path = filedialog.askopenfilename()
 
-def url_to_pdf(url):
-    'Saves webpage as a pdf in the user specified download location'
+def download_page(url):
+    '''Saves webpage as a pdf in the user specified download location'''
     r = requests.get(url, allow_redirects=True) 
     fileName = userTicker + userType
     get_download_path()
@@ -25,7 +26,9 @@ def url_to_pdf(url):
 # User Input
 userTicker = input('Enter company ticker symbol: ').upper()
 userType = input('Enter filing type: ').upper()
-userNum = input('How many would you like to download? ')
+userNum = int(input('How many would you like to download? '))
+print('Specify the desired file location')
+#downloadPath = get_download_path
 
 # SEC Search Bar and driver settings
 #chrome_options = Options()
@@ -38,44 +41,46 @@ search = driver.find_element_by_id('company')
 search.send_keys(userTicker)
 search.send_keys(Keys.RETURN)
 
-try:
-    # File type search bar
-    type = WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.ID, 'type'))
-    )
-    type.send_keys(userType)
-    type.send_keys(Keys.RETURN)
-
-    # Click each document button 
-    # docButton= WebDriverWait(driver, 10).until(
-    #     EC.element_to_be_clickable((By.ID, 'documentsbutton'))
-    # )
-    #docButton.click()  
+#try:
+# File type search bar
+fileType = WebDriverWait(driver, 10).until(
+EC.presence_of_element_located((By.ID, 'type'))
+)
+fileType.send_keys(userType)
+fileType.send_keys(Keys.RETURN)
 
 
-    docsXPATHList = []
-    print('asldk')
-    # for i in range(2,userNum+2):
-    #     print('in loop')
-        # addString = str(i)
-        # xpathString = f'/html/body/div[4]/div[4]/table/tbody/tr[{addString}]/td[2]/a[1]'
-        # docElement = driver.find_element_by_xpath(xpathString)
-        # docsXPATHList.append(docElement)
+# Click each document button 
+# docButton= WebDriverWait(driver, 10).until(
+#     EC.element_to_be_clickable((By.ID, 'documentsbutton'))
+# )
+#docButton.click()  
 
+#docButtonListURL = driver.current_url
+docsXPATHList = []
+for i in range(2,userNum+2):
+    addString = str(i)
+    xpathString = f'/html/body/div[4]/div[4]/table/tbody/tr[{i}]/td[2]/a[1]'
+    docsXPATHList.append(xpathString)
 
-    #for doc in docsXPATHList:
+print(docsXPATHList, '\n')
+
+for doc in docsXPATHList:
+    
     docButton = WebDriverWait(driver,10).until(
-        EC.element_to_be_clickable((By.ID, 'documentsbutton'))
+        EC.element_to_be_clickable((By.XPATH,doc))
     )
     docButton.click()
+
     form= WebDriverWait(driver, 10).until(
     EC.element_to_be_clickable((By.XPATH, '//*[@id="formDiv"]/div/table/tbody/tr[2]/td[3]/a'))
     )
     form.click()
+    
+    #specialDocHeader = driver.find_element_by_xpath('//*[@id="formDiv"]/div/table/tbody/tr[2]/td[3]/span')
 
-    specialDocHeader = driver.find_element_by_xpath('/html/body/nav')
-    if specialDocHeader.is_displayed():
-        menuDropDown= WebDriverWait(driver, 5).until(
+    if driver.find_elements_by_xpath('//*[@id="formDiv"]/div/table/tbody/tr[2]/td[3]/span'): #.is_displayed():
+        menuDropDown= WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, '//*[@id="menu-dropdown-link"]/i'))
         )
         menuDropDown.click()
@@ -83,40 +88,30 @@ try:
             EC.element_to_be_clickable((By.ID,'form-information-html'))
         )
         openHTML.click()
-    
-        url_to_pdf(driver.current_url)
-
-    else:
-        url_to_pdf(driver.current_url)
-         
-
-
-
-    # form= WebDriverWait(driver, 10).until(
-    # EC.element_to_be_clickable((By.XPATH, '//*[@id="formDiv"]/div/table/tbody/tr[2]/td[3]/a'))
-    # )
-    # form.click()
-
-    # specialDocHeader = driver.find_element_by_xpath('/html/body/nav')
-    
-    # if specialDocHeader.is_displayed():
-
-    #     menuDropDown= WebDriverWait(driver, 5).until(
-    #         EC.element_to_be_clickable((By.XPATH, '//*[@id="menu-dropdown-link"]/i'))
-    #     )
         
-    #     menuDropDown.click()
-    #     openHTML= WebDriverWait(driver, 10).until(
-    #         EC.element_to_be_clickable((By.ID,'form-information-html'))
-    #     )
-    #     openHTML.click()
+        #download_page(driver.current_url)
 
-    # else:
-    #     pass
+        if len(docsXPATHList) > 1:
+            actions = ActionChains(driver)      
+            actions.key_down(Keys.CONTROL).key_down(Keys.TAB).key_up(Keys.TAB).key_up(Keys.CONTROL).perform()
+            driver.back()
+            driver.back()
+    else: 
+        #download_page
+        if len(docsXPATHList) > 1:
+            driver.back()
+            driver.implicitly_wait(3)
+            driver.back()
+            fileType = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, 'type'))
+            )
+            fileType.send_keys(Keys.RETURN)
+            print('one iteration')
 
-except:
-    driver.quit()
 
-finally:
+#except:
+#    driver.quit()
+
+#finally:
     #pdfkit.from_url(driver.current_url, 'out.pdf')
-    pass
+#    pass
