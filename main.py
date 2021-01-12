@@ -10,6 +10,7 @@ import time
 import requests
 import os 
 import tkinter as tk
+import urllib.request
 
 def get_download_path():
     root = tk.Tk()
@@ -51,12 +52,6 @@ fileType.send_keys(Keys.RETURN)
 
 
 # Click each document button 
-# docButton= WebDriverWait(driver, 10).until(
-#     EC.element_to_be_clickable((By.ID, 'documentsbutton'))
-# )
-#docButton.click()  
-
-#docButtonListURL = driver.current_url
 docsXPATHList = []
 for i in range(2,userNum+2):
     addString = str(i)
@@ -65,6 +60,7 @@ for i in range(2,userNum+2):
 
 print(docsXPATHList, '\n')
 
+downloadList = []
 for doc in docsXPATHList:
     
     docButton = WebDriverWait(driver,10).until(
@@ -88,8 +84,11 @@ for doc in docsXPATHList:
             EC.element_to_be_clickable((By.ID,'form-information-html'))
         )
         openHTML.click()
-        
-        #download_page(driver.current_url)
+
+        #actions = ActionChains(driver)
+        #actions.key_down(Keys.CONTROL).key_down(Keys.TAB).key_up(Keys.TAB).key_up(Keys.CONTROL).perform()
+        driver.implicitly_wait(3)
+        downloadList.append(driver.current_url)
 
         if len(docsXPATHList) > 1:
             actions = ActionChains(driver)      
@@ -97,8 +96,13 @@ for doc in docsXPATHList:
             driver.back()
             driver.back()
     else: 
-        #download_page
+        actions = ActionChains(driver)
+        actions.key_down(Keys.CONTROL).key_down(Keys.TAB).key_up(Keys.TAB).key_up(Keys.CONTROL).perform()
+        driver.implicitly_wait(3)
+        downloadList.append(driver.current_url)
         if len(docsXPATHList) > 1:
+            actions = ActionChains(driver) 
+            actions.key_down(Keys.CONTROL).key_down(Keys.TAB).key_up(Keys.TAB).key_up(Keys.CONTROL).perform()
             driver.back()
             driver.implicitly_wait(3)
             driver.back()
@@ -108,10 +112,8 @@ for doc in docsXPATHList:
             fileType.send_keys(Keys.RETURN)
             print('one iteration')
 
-
-#except:
-#    driver.quit()
-
-#finally:
-    #pdfkit.from_url(driver.current_url, 'out.pdf')
-#    pass
+for i in downloadList:
+    print(i)
+    index = downloadList.index(i)
+    fileIndex = str(index + 1)
+    urllib.request.urlretrieve(i,r"C:\Users\arjun\Downloads\{} {} {}.html".format(userTicker, userType, fileIndex))
