@@ -62,58 +62,61 @@ print(docsXPATHList, '\n')
 
 downloadList = []
 for doc in docsXPATHList:
-    
+    parentWindow = driver.current_window_handle
     docButton = WebDriverWait(driver,10).until(
         EC.element_to_be_clickable((By.XPATH,doc))
     )
     docButton.click()
-
-    form= WebDriverWait(driver, 10).until(
-    EC.element_to_be_clickable((By.XPATH, '//*[@id="formDiv"]/div/table/tbody/tr[2]/td[3]/a'))
-    )
-    form.click()
-    
-    #specialDocHeader = driver.find_element_by_xpath('//*[@id="formDiv"]/div/table/tbody/tr[2]/td[3]/span')
-
-    if driver.find_elements_by_xpath('//*[@id="formDiv"]/div/table/tbody/tr[2]/td[3]/span'): #.is_displayed():
+    print('clicked doc button')
+    driver.implicitly_wait(5)
+    if driver.find_elements_by_xpath('//*[contains(text(), "iXBRL")]'):
+    #if driver.find_elements_by_xpath('//*[@id="formDiv"]/div/table/tbody/tr[2]/td[3]/span'):
+        form= WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, '//*[@id="formDiv"]/div/table/tbody/tr[2]/td[3]/a'))
+            )
+        form.click()
+        print('form is clicked')
+        driver.implicitly_wait(5)
         menuDropDown= WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, '//*[@id="menu-dropdown-link"]/i'))
         )
         menuDropDown.click()
+        print('menu drop down is clicked')
+        driver.implicitly_wait(5)
         openHTML= WebDriverWait(driver, 10).until(
             EC.element_to_be_clickable((By.ID,'form-information-html'))
         )
         openHTML.click()
+        driver.implicitly_wait(5)
+        print('open html is clicked')
 
-        #actions = ActionChains(driver)
-        #actions.key_down(Keys.CONTROL).key_down(Keys.TAB).key_up(Keys.TAB).key_up(Keys.CONTROL).perform()
-        driver.implicitly_wait(3)
-        downloadList.append(driver.current_url)
+        childWindows = driver.window_handles
+        for w in childWindows:
+            if w != parentWindow:
+                driver.switch_to.window(w)
+        print(driver.current_url)
 
-        if len(docsXPATHList) > 1:
-            actions = ActionChains(driver)      
-            actions.key_down(Keys.CONTROL).key_down(Keys.TAB).key_up(Keys.TAB).key_up(Keys.CONTROL).perform()
-            driver.back()
-            driver.back()
-    else: 
-        actions = ActionChains(driver)
-        actions.key_down(Keys.CONTROL).key_down(Keys.TAB).key_up(Keys.TAB).key_up(Keys.CONTROL).perform()
-        driver.implicitly_wait(3)
+        downloadList.append(driver.current_url)      
+        driver.switch_to.window(parentWindow)
+        driver.back()
+        driver.back()
+    else:
+        print('in else')
+        form = WebDriverWait(driver, 10).until(
+        EC.element_to_be_clickable((By.XPATH, '//*[@id="formDiv"]/div/table/tbody/tr[2]/td[3]/a'))
+        )
+        form.click()
+        driver.implicitly_wait(5)
         downloadList.append(driver.current_url)
-        if len(docsXPATHList) > 1:
-            actions = ActionChains(driver) 
-            actions.key_down(Keys.CONTROL).key_down(Keys.TAB).key_up(Keys.TAB).key_up(Keys.CONTROL).perform()
-            driver.back()
-            driver.implicitly_wait(3)
-            driver.back()
-            fileType = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.ID, 'type'))
-            )
-            fileType.send_keys(Keys.RETURN)
-            print('one iteration')
+        driver.implicitly_wait(5)
+        driver.back()
+        driver.back()
+        #driver.switch_to_window(parentWindow)
+         
+print(downloadList)
 
 for i in downloadList:
-    print(i)
+    #print(i)
     index = downloadList.index(i)
     fileIndex = str(index + 1)
     urllib.request.urlretrieve(i,r"C:\Users\arjun\Downloads\{} {} {}.html".format(userTicker, userType, fileIndex))
